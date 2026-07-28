@@ -1,0 +1,1919 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="БроньКорт — сервис бронирования теннисных кортов. Найди корт рядом и забронируй онлайн.">
+<title>БроньКорт — бронирование теннисных кортов</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: oklch(0.99 0 0);
+  --surface: oklch(0.97 0 0);
+  --fg: oklch(0.15 0 0);
+  --muted: oklch(0.55 0 0);
+  --border: oklch(0.85 0 0);
+  --accent: oklch(0.50 0.18 25);
+  --font-display: 'JetBrains Mono', 'Courier New', monospace;
+  --font-body: 'Inter', 'Helvetica Neue', Arial, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Courier New', monospace;
+  color-scheme: light dark;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: oklch(0.15 0 0);
+    --surface: oklch(0.19 0 0);
+    --fg: oklch(0.93 0 0);
+    --muted: oklch(0.55 0 0);
+    --border: oklch(0.28 0 0);
+    --accent: oklch(0.65 0.18 25);
+  }
+}
+[data-theme="dark"] {
+  --bg: oklch(0.15 0 0);
+  --surface: oklch(0.19 0 0);
+  --fg: oklch(0.93 0 0);
+  --muted: oklch(0.55 0 0);
+  --border: oklch(0.28 0 0);
+  --accent: oklch(0.65 0.18 25);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { font-size: 16px; scroll-behavior: smooth; }
+
+body {
+  font-family: var(--font-body);
+  font-weight: 400;
+  color: var(--fg);
+  background: var(--bg);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  transition: background 0.3s, color 0.3s;
+}
+
+a { color: inherit; text-decoration: none; }
+img { max-width: 100%; display: block; }
+button { font: inherit; cursor: pointer; border: none; background: none; }
+button:active { transform: translateY(1px); }
+input, select, textarea { font: inherit; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.skip-link {
+  position: absolute;
+  top: -100%;
+  left: 16px;
+  z-index: 200;
+  padding: 12px 24px;
+  background: var(--accent);
+  color: oklch(0.99 0 0);
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  transition: top 0.2s;
+}
+.skip-link:focus { top: 8px; }
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+/* Navigation */
+.nav {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
+  transition: background 0.3s;
+}
+.nav-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 56px;
+}
+.nav-logo {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 14px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.nav-links {
+  display: flex;
+  gap: 0;
+}
+.nav-links a {
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  padding: 8px 16px;
+  color: var(--muted);
+  border-bottom: 2px solid transparent;
+  transition: color 0.15s, border-color 0.15s;
+}
+.nav-links a.active {
+  color: var(--fg);
+  border-bottom-color: var(--accent);
+}
+.nav-links a:hover { color: var(--fg); }
+
+.nav-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.theme-toggle {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border);
+  color: var(--fg);
+  transition: all 0.15s;
+}
+.theme-toggle:hover { border-color: var(--fg); }
+.theme-toggle svg { width: 16px; height: 16px; }
+.theme-toggle .icon-moon { display: block; }
+.theme-toggle .icon-sun { display: none; }
+[data-theme="dark"] .theme-toggle .icon-moon { display: none; }
+[data-theme="dark"] .theme-toggle .icon-sun { display: block; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .theme-toggle .icon-moon { display: none; }
+  :root:not([data-theme="light"]) .theme-toggle .icon-sun { display: block; }
+}
+
+/* Screens */
+.screen { display: none; }
+.screen.active {
+  display: block;
+  animation: screenFadeIn 0.3s ease;
+}
+@keyframes screenFadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Hero */
+.hero {
+  padding: 80px 0 64px;
+  border-bottom: 1px solid var(--border);
+}
+.hero-label {
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 16px;
+}
+.hero h1 {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: clamp(40px, 6vw, 64px);
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+  text-transform: uppercase;
+  max-width: 800px;
+  margin-bottom: 32px;
+}
+.hero-accent {
+  color: var(--accent);
+}
+
+/* Search bar */
+.search-bar {
+  display: flex;
+  gap: 0;
+  max-width: 600px;
+  border: 1px solid var(--border);
+  height: 48px;
+}
+.search-bar input {
+  flex: 1;
+  border: none;
+  padding: 0 16px;
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--fg);
+  background: transparent;
+  outline: none;
+}
+.search-bar input::placeholder { color: var(--muted); }
+.search-bar button {
+  width: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--fg);
+  color: var(--bg);
+  transition: background 0.2s;
+}
+.search-bar button:hover { background: var(--accent); }
+.search-bar .geo-btn {
+  width: 48px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  color: var(--muted);
+  border: none;
+  border-right: 1px solid var(--border);
+  cursor: pointer;
+  transition: color 0.2s, background 0.2s;
+}
+.search-bar .geo-btn:hover { color: var(--fg); background: var(--surface); }
+.search-bar .geo-btn.active { color: oklch(0.65 0.15 145); }
+.search-bar .geo-btn.error { color: oklch(0.55 0.2 25); }
+@keyframes geo-spin { to { transform: rotate(360deg); } }
+.search-bar .geo-btn.loading svg { animation: geo-spin 0.8s linear infinite; }
+.geo-status {
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 8px;
+  min-height: 18px;
+}
+.geo-status span { color: var(--accent); font-weight: 600; }
+
+/* Section */
+.section {
+  padding: 48px 0;
+  border-bottom: 1px solid var(--border);
+}
+.section-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 32px;
+}
+.section-title {
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  text-transform: uppercase;
+}
+.section-link {
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  color: var(--muted);
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 2px;
+  transition: color 0.15s;
+}
+.section-link:hover { color: var(--fg); }
+
+/* Court grid */
+.court-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1px;
+  background: var(--border);
+}
+.court-card {
+  background: var(--bg);
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  transition: background 0.3s;
+}
+.court-card-image {
+  width: 100%;
+  aspect-ratio: 16/9;
+  background: var(--surface);
+  margin-bottom: 16px;
+  position: relative;
+  overflow: hidden;
+}
+.court-card-image svg {
+  width: 100%;
+  height: 100%;
+}
+.court-card-type {
+  font-family: var(--font-display);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 4px;
+}
+.court-card-title {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 16px;
+  line-height: 1.2;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: -0.01em;
+}
+.court-card-meta {
+  font-size: 13px;
+  color: var(--muted);
+  margin-bottom: 16px;
+  letter-spacing: 0.01em;
+}
+.court-card-price {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 18px;
+  margin-bottom: 16px;
+}
+.court-card-price span {
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--muted);
+  font-family: var(--font-body);
+}
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 44px;
+  padding: 0 24px;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  border: 1px solid var(--fg);
+  color: var(--fg);
+  background: transparent;
+  transition: all 0.2s;
+}
+.btn:hover { background: var(--fg); color: var(--bg); }
+.btn:active { transform: translateY(1px); }
+.btn-primary {
+  background: var(--fg);
+  color: var(--bg);
+  border-color: var(--fg);
+}
+.btn-primary:hover { background: var(--accent); border-color: var(--accent); }
+.btn-accent {
+  background: var(--accent);
+  color: oklch(0.99 0 0);
+  border-color: var(--accent);
+}
+.btn-accent:hover { background: var(--fg); border-color: var(--fg); }
+.btn-sm {
+  height: 44px;
+  padding: 0 20px;
+  font-size: 12px;
+}
+
+/* Features strip */
+.features {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1px;
+  background: var(--border);
+}
+.feature-item {
+  background: var(--bg);
+  padding: 32px 24px;
+  text-align: center;
+  transition: background 0.3s;
+}
+.feature-number {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 32px;
+  line-height: 1;
+  margin-bottom: 8px;
+}
+.feature-number .accent-num {
+  color: var(--accent);
+}
+.feature-label {
+  font-size: 14px;
+  color: var(--muted);
+  letter-spacing: 0.02em;
+}
+
+/* Catalog screen */
+.catalog-header {
+  padding: 40px 0 24px;
+  border-bottom: 1px solid var(--border);
+}
+.catalog-header h1 {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: clamp(28px, 4vw, 36px);
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+.catalog-header p {
+  font-size: 15px;
+  color: var(--muted);
+}
+
+/* Filters */
+.filters {
+  display: flex;
+  gap: 0;
+  padding: 16px 0;
+  border-bottom: 1px solid var(--border);
+  flex-wrap: wrap;
+}
+.filter-btn {
+  padding: 12px 20px;
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  border: 1px solid var(--border);
+  color: var(--muted);
+  background: transparent;
+  transition: all 0.15s;
+  margin-right: -1px;
+}
+.filter-btn:hover { color: var(--fg); }
+.filter-btn.active {
+  background: var(--fg);
+  color: var(--bg);
+  border-color: var(--fg);
+}
+
+/* Catalog court list */
+.court-list {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1px;
+  background: var(--border);
+}
+.court-list-item {
+  background: var(--bg);
+  padding: 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  transition: background 0.3s, opacity 0.3s;
+}
+.court-list-item.hidden {
+  display: none;
+}
+.court-list-item.selectable {
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s;
+}
+.court-list-item.selectable:hover {
+  background: var(--surface);
+}
+.court-list-item.selected-court {
+  border-left: 3px solid var(--accent);
+  background: var(--surface);
+}
+.court-list-item .court-card-image {
+  width: 140px;
+  min-width: 140px;
+  aspect-ratio: 1;
+  margin-bottom: 0;
+  margin-left: 16px;
+}
+
+/* Empty state */
+.empty-state {
+  display: none;
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 64px 24px;
+  background: var(--bg);
+}
+.empty-state.visible {
+  display: block;
+}
+.empty-state-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+  opacity: 0.4;
+}
+.empty-state-title {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 16px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+.empty-state-desc {
+  font-size: 14px;
+  color: var(--muted);
+}
+
+/* Tag pills in catalog */
+.tag-pill {
+  font-size: 12px;
+  padding: 3px 8px;
+  border: 1px solid var(--border);
+  letter-spacing: 0.02em;
+}
+
+/* Booking screen */
+.booking-layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1px;
+  background: var(--border);
+}
+.booking-panel {
+  background: var(--bg);
+  padding: 32px;
+  transition: background 0.3s;
+}
+.booking-panel h2 {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 16px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-bottom: 24px;
+}
+
+/* Date picker */
+.date-picker {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+  margin-bottom: 24px;
+}
+.date-picker-label {
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+  text-align: center;
+  padding: 6px 0;
+}
+.date-cell {
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 500;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.date-cell:hover { border-color: var(--border); }
+.date-cell.selected {
+  background: var(--fg);
+  color: var(--bg);
+  border-color: var(--fg);
+}
+.date-cell.other-month { color: var(--border); }
+.date-cell.today { border-color: var(--accent); color: var(--accent); }
+
+/* Time slots */
+.time-slots {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-bottom: 24px;
+}
+.time-slot {
+  padding: 10px;
+  font-size: 13px;
+  font-weight: 500;
+  text-align: center;
+  border: 1px solid var(--border);
+  transition: all 0.15s;
+  letter-spacing: 0.02em;
+}
+.time-slot:hover { border-color: var(--fg); }
+.time-slot.selected { background: var(--fg); color: var(--bg); border-color: var(--fg); }
+.time-slot.unavailable {
+  color: var(--border);
+  cursor: not-allowed;
+  text-decoration: line-through;
+}
+
+/* Booking summary */
+.booking-summary {
+  border-top: 1px solid var(--border);
+  margin-top: 24px;
+  padding-top: 24px;
+}
+.summary-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 14px;
+  margin-bottom: 12px;
+}
+.summary-row.total {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 18px;
+  border-top: 1px solid var(--border);
+  padding-top: 16px;
+  margin-top: 16px;
+}
+
+/* Profile screen */
+.profile-header {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  padding: 40px 0;
+  border-bottom: 1px solid var(--border);
+}
+.profile-avatar {
+  width: 72px;
+  height: 72px;
+  border: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 24px;
+  letter-spacing: 0.02em;
+}
+.profile-name {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 20px;
+  letter-spacing: -0.01em;
+  text-transform: uppercase;
+}
+.profile-email {
+  font-size: 14px;
+  color: var(--muted);
+}
+
+/* History list */
+.history-list { margin-top: 24px; }
+.history-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 0;
+  border-bottom: 1px solid var(--border);
+}
+.history-item:last-child { border-bottom: none; }
+.history-court {
+  font-weight: 500;
+  font-size: 14px;
+}
+.history-date {
+  font-size: 13px;
+  color: var(--muted);
+}
+.history-status {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 6px 14px;
+  border: 1px solid var(--border);
+}
+.history-status.completed { border-color: var(--fg); }
+.history-status.active { border-color: var(--accent); color: var(--accent); }
+
+/* Profile sidebar grid */
+.profile-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1px;
+  background: var(--border);
+  margin-top: 24px;
+}
+.profile-card {
+  background: var(--bg);
+  padding: 24px;
+  transition: background 0.3s;
+}
+.profile-card h3 {
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-bottom: 16px;
+  color: var(--muted);
+}
+.profile-card .list-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 0;
+  font-size: 14px;
+  border-bottom: 1px solid var(--border);
+}
+.profile-card .list-item:last-child { border-bottom: none; }
+
+/* SVG tennis court illustration */
+.tennis-court-svg { width: 100%; height: 100%; }
+
+/* Court detail inline (booking) */
+.court-detail-inline {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1px;
+  background: var(--border);
+  margin-bottom: 24px;
+}
+.court-detail-inline > div {
+  background: var(--bg);
+  padding: 16px;
+  font-size: 13px;
+  transition: background 0.3s;
+}
+.court-detail-inline .label {
+  font-family: var(--font-display);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 4px;
+}
+
+/* Mobile nav toggle */
+.mobile-nav-toggle {
+  display: none;
+  width: 44px;
+  height: 44px;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border);
+}
+
+.mobile-nav {
+  display: none;
+  position: fixed;
+  top: 56px;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: var(--bg);
+  z-index: 99;
+  flex-direction: column;
+  padding: 24px;
+  border-top: 1px solid var(--border);
+}
+.mobile-nav.open { display: flex; }
+.mobile-nav a {
+  padding: 16px 0;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 18px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  border-bottom: 1px solid var(--border);
+  color: var(--muted);
+  transition: color 0.15s;
+}
+.mobile-nav a.active { color: var(--fg); }
+.mobile-nav a:hover { color: var(--fg); }
+
+/* Footer */
+.footer {
+  border-top: 1px solid var(--border);
+  padding: 48px 0 32px;
+  transition: background 0.3s;
+}
+.footer-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 1fr;
+  gap: 48px;
+  margin-bottom: 48px;
+}
+.footer-brand {
+  max-width: 280px;
+}
+.footer-brand .nav-logo {
+  display: block;
+  margin-bottom: 12px;
+}
+.footer-brand p {
+  font-size: 14px;
+  color: var(--muted);
+  line-height: 1.6;
+}
+.footer-col h4 {
+  font-family: var(--font-display);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 16px;
+}
+.footer-col a {
+  display: block;
+  font-size: 14px;
+  color: var(--muted);
+  padding: 4px 0;
+  transition: color 0.15s;
+}
+.footer-col a:hover { color: var(--fg); }
+.footer-bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 24px;
+  border-top: 1px solid var(--border);
+  font-size: 13px;
+  color: var(--muted);
+}
+.footer-social {
+  display: flex;
+  gap: 12px;
+}
+.footer-social a {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border);
+  color: var(--muted);
+  transition: all 0.15s;
+}
+.footer-social a:hover {
+  border-color: var(--fg);
+  color: var(--fg);
+}
+.footer-social svg { width: 16px; height: 16px; }
+
+/* Cart */
+.cart-badge {
+  position: relative;
+}
+.cart-badge::after {
+  content: attr(data-count);
+  position: absolute;
+  top: 2px;
+  right: 4px;
+  min-width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: oklch(0.99 0 0);
+  font-family: var(--font-display);
+  font-size: 10px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 4px;
+  line-height: 1;
+}
+.cart-badge[data-count="0"]::after { display: none; }
+
+.cart-items { margin-top: 24px; }
+.cart-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 0;
+  border-bottom: 1px solid var(--border);
+  gap: 16px;
+}
+.cart-item:last-child { border-bottom: none; }
+.cart-item-info { flex: 1; }
+.cart-item-court {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  margin-bottom: 4px;
+}
+.cart-item-details { font-size: 13px; color: var(--muted); }
+.cart-item-price {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 16px;
+  white-space: nowrap;
+}
+.cart-item-remove {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border);
+  color: var(--muted);
+  flex-shrink: 0;
+  transition: all 0.15s;
+}
+.cart-item-remove:hover { border-color: var(--accent); color: var(--accent); }
+
+.cart-empty { padding: 40px 0; text-align: center; }
+.cart-empty-title {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 14px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+.cart-empty-desc { font-size: 14px; color: var(--muted); }
+
+.cart-summary {
+  border-top: 1px solid var(--border);
+  padding-top: 24px;
+  margin-top: 16px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .nav-links { display: none; }
+  .mobile-nav-toggle { display: flex; }
+
+  .court-grid { grid-template-columns: 1fr; }
+  .features { grid-template-columns: repeat(2, 1fr); }
+  .court-list { grid-template-columns: 1fr; }
+  .court-list-item { flex-direction: column-reverse; }
+  .court-list-item .court-card-image { width: 100%; min-width: auto; margin-left: 0; margin-bottom: 16px; }
+  .booking-layout { grid-template-columns: 1fr; }
+  .profile-grid { grid-template-columns: 1fr; }
+  .court-detail-inline { grid-template-columns: 1fr; }
+  .time-slots { grid-template-columns: repeat(2, 1fr); }
+  .profile-header { flex-direction: column; text-align: center; }
+
+  .hero { padding: 48px 0 40px; }
+  .hero h1 { font-size: clamp(28px, 8vw, 40px); }
+  .section { padding: 32px 0; }
+  .booking-panel { padding: 24px; }
+
+  .footer-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 32px;
+  }
+  .footer-brand { grid-column: 1 / -1; max-width: none; }
+  .footer-bottom { flex-direction: column; gap: 16px; text-align: center; }
+}
+
+@media (max-width: 480px) {
+  .features { grid-template-columns: 1fr; }
+  .date-picker { gap: 2px; }
+  .time-slots { grid-template-columns: repeat(2, 1fr); }
+  .container { padding: 0 16px; }
+  .footer-grid { grid-template-columns: 1fr; gap: 24px; }
+}
+</style>
+</head>
+<body>
+
+<a href="#main-content" class="skip-link">Перейти к контенту</a>
+
+<!-- Navigation -->
+<nav class="nav" aria-label="Основная навигация">
+  <div class="container">
+    <div class="nav-inner">
+      <a href="#" class="nav-logo" data-screen="home">БроньКорт</a>
+      <div class="nav-links" role="menubar">
+        <a href="#" data-screen="home" class="active" role="menuitem">Главная</a>
+        <a href="#" data-screen="booking" role="menuitem" class="cart-badge" data-count="0">Бронь</a>
+        <a href="#" data-screen="profile" role="menuitem">Профиль</a>
+      </div>
+      <div class="nav-actions">
+        <button class="theme-toggle" aria-label="Переключить тему" id="theme-toggle">
+          <svg class="icon-moon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M13.5 8.5a5.5 5.5 0 01-7-7A5.5 5.5 0 1013.5 8.5z"/>
+          </svg>
+          <svg class="icon-sun" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+            <circle cx="8" cy="8" r="3"/><path d="M8 1v2M8 13v2M1 8h2M13 8h2M3.05 3.05l1.41 1.41M11.54 11.54l1.41 1.41M3.05 12.95l1.41-1.41M11.54 4.46l1.41-1.41"/>
+          </svg>
+        </button>
+        <button class="mobile-nav-toggle" aria-label="Открыть меню">
+          <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+            <path d="M2 4h14M2 9h14M2 14h14" stroke="currentColor" stroke-width="1.5"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </div>
+  <div class="mobile-nav" role="menu">
+    <a href="#" data-screen="home" class="active" role="menuitem">Главная</a>
+    <a href="#" data-screen="booking" role="menuitem" class="cart-badge" data-count="0">Бронь</a>
+    <a href="#" data-screen="profile" role="menuitem">Профиль</a>
+  </div>
+</nav>
+
+<!-- ==================== SCREEN: HOME ==================== -->
+<main id="main-content">
+<div class="screen active" data-screen="home">
+
+  <section class="hero">
+    <div class="container">
+      <div class="hero-label">Сезон открыт</div>
+      <h1>Найди свой<br><span class="hero-accent">корт</span> и играй</h1>
+      <div class="search-bar" role="search">
+        <button class="geo-btn" id="geo-btn" aria-label="Определить моё местоположение" title="Найти ближайшие корты">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+            <circle cx="8" cy="8" r="3"/><path d="M8 1v3M8 12v3M1 8h3M12 8h3"/>
+          </svg>
+        </button>
+        <input type="text" placeholder="Город, район, адрес корта..." aria-label="Поиск корта" id="hero-search">
+        <button aria-label="Найти">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+            <circle cx="7" cy="7" r="5.5"/><path d="M11 11l3.5 3.5"/>
+          </svg>
+        </button>
+      </div>
+      <div class="geo-status" id="geo-status"></div>
+    </div>
+  </section>
+
+  <section class="features" aria-label="Преимущества">
+    <div class="feature-item">
+      <div class="feature-number"><span class="accent-num">150</span>+</div>
+      <div class="feature-label">кортов по всей стране</div>
+    </div>
+    <div class="feature-item">
+      <div class="feature-number"><span class="accent-num">3</span> мин</div>
+      <div class="feature-label">мгновенное бронирование</div>
+    </div>
+    <div class="feature-item">
+      <div class="feature-number"><span class="accent-num">0</span> ₽</div>
+      <div class="feature-label">без комиссии</div>
+    </div>
+    <div class="feature-item">
+      <div class="feature-number"><span class="accent-num">24</span>ч</div>
+      <div class="feature-label">бесплатная отмена</div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container">
+      <div class="section-header">
+        <h2 class="section-title">Популярные корты</h2>
+        <a href="#" data-screen="booking" class="section-link">Забронировать →</a>
+      </div>
+      <div class="court-grid">
+        <div class="court-card">
+          <div class="court-card-image">
+            <svg viewBox="0 0 160 90" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <rect width="160" height="90" fill="var(--surface)"/>
+              <rect x="28" y="8" width="104" height="74" fill="oklch(0.55 0.05 145)" opacity="0.4"/>
+              <rect x="28" y="8" width="104" height="74" fill="none" stroke="var(--muted)" stroke-width="0.5"/>
+              <line x1="72" y1="8" x2="72" y2="82" stroke="var(--border)" stroke-width="2" opacity="0.6"/>
+              <line x1="88" y1="8" x2="88" y2="82" stroke="var(--border)" stroke-width="2" opacity="0.6"/>
+              <rect x="28" y="43" width="104" height="4" fill="var(--border)" opacity="0.7"/>
+              <circle cx="80" cy="45" r="3" fill="var(--border)" opacity="0.7"/>
+            </svg>
+          </div>
+          <div class="court-card-type">Грунт</div>
+          <div class="court-card-title">Корт №1 «Центральный»</div>
+          <div class="court-card-meta">ул. Теннисная, 15 · 2,5 км</div>
+          <div class="court-card-price">1 200 <span>₽/час</span></div>
+          <button class="btn btn-sm btn-primary" data-screen="booking" data-court="1">Выбрать</button>
+        </div>
+        <div class="court-card">
+          <div class="court-card-image">
+            <svg viewBox="0 0 160 90" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <rect width="160" height="90" fill="var(--surface)"/>
+              <rect x="28" y="8" width="104" height="74" fill="oklch(0.45 0.06 220)" opacity="0.35"/>
+              <rect x="28" y="8" width="104" height="74" fill="none" stroke="var(--muted)" stroke-width="0.5"/>
+              <line x1="72" y1="8" x2="72" y2="82" stroke="var(--border)" stroke-width="2" opacity="0.6"/>
+              <line x1="88" y1="8" x2="88" y2="82" stroke="var(--border)" stroke-width="2" opacity="0.6"/>
+              <rect x="28" y="43" width="104" height="4" fill="var(--border)" opacity="0.7"/>
+              <circle cx="80" cy="45" r="3" fill="var(--border)" opacity="0.7"/>
+            </svg>
+          </div>
+          <div class="court-card-type">Хард</div>
+          <div class="court-card-title">Корт «Крытый»</div>
+          <div class="court-card-meta">пр. Спорта, 8 · 4,1 км</div>
+          <div class="court-card-price">1 800 <span>₽/час</span></div>
+          <button class="btn btn-sm btn-primary" data-screen="booking" data-court="2">Выбрать</button>
+        </div>
+        <div class="court-card">
+          <div class="court-card-image">
+            <svg viewBox="0 0 160 90" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <rect width="160" height="90" fill="var(--surface)"/>
+              <rect x="28" y="8" width="104" height="74" fill="oklch(0.55 0.05 145)" opacity="0.4"/>
+              <rect x="28" y="8" width="104" height="74" fill="none" stroke="var(--muted)" stroke-width="0.5"/>
+              <line x1="72" y1="8" x2="72" y2="82" stroke="var(--border)" stroke-width="2" opacity="0.6"/>
+              <line x1="88" y1="8" x2="88" y2="82" stroke="var(--border)" stroke-width="2" opacity="0.6"/>
+              <rect x="28" y="43" width="104" height="4" fill="var(--border)" opacity="0.7"/>
+              <circle cx="80" cy="45" r="3" fill="var(--border)" opacity="0.7"/>
+            </svg>
+          </div>
+          <div class="court-card-type">Грунт</div>
+          <div class="court-card-title">Корт «Парковый»</div>
+          <div class="court-card-meta">Парк Горького, 1 · 0,8 км</div>
+          <div class="court-card-price">1 500 <span>₽/час</span></div>
+          <button class="btn btn-sm btn-primary" data-screen="booking" data-court="3">Выбрать</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container" style="text-align:center;padding:32px 0;">
+      <p style="font-family:var(--font-display);font-weight:600;font-size:clamp(18px,3vw,24px);letter-spacing:-0.01em;text-transform:uppercase;margin-bottom:16px;">
+        Ещё не с нами?<br>Зарегистрируйся и получи скидку 20%
+      </p>
+      <button class="btn btn-accent" data-screen="profile">Создать аккаунт</button>
+    </div>
+  </section>
+</div>
+
+<!-- ==================== SCREEN: BOOKING ==================== -->
+<div class="screen" data-screen="booking">
+  <div class="container">
+    <div class="catalog-header">
+      <h1>Бронирование</h1>
+      <p>Выберите корт и забронируйте онлайн</p>
+    </div>
+  </div>
+
+  <!-- STEP 1: Каталог кортов -->
+  <div class="container">
+    <div class="filters" role="toolbar" aria-label="Фильтры по типу покрытия" id="booking-filters">
+      <button class="filter-btn active" data-filter="all">Все</button>
+      <button class="filter-btn" data-filter="грунт">Грунт</button>
+      <button class="filter-btn" data-filter="хард">Хард</button>
+      <button class="filter-btn" data-filter="трава">Трава</button>
+      <button class="filter-btn" data-filter="крытые">Крытые</button>
+      <button class="filter-btn" data-filter="открытые">Открытые</button>
+    </div>
+  </div>
+
+  <section class="section" style="border-top:none;">
+    <div class="container">
+      <div class="court-list" id="booking-court-list">
+        <div class="court-list-item selectable" data-court-id="1" data-type="грунт открытые" data-search="курт номер 1 центральный теннисная">
+          <div>
+            <div class="court-card-type">Грунт</div>
+            <div class="court-card-title">Корт №1 «Центральный»</div>
+            <div class="court-card-meta">ул. Теннисная, 15 · 2,5 км</div>
+            <div style="display:flex;gap:4px;margin-bottom:12px;flex-wrap:wrap;">
+              <span class="tag-pill">Освещение</span>
+              <span class="tag-pill">Раздевалка</span>
+              <span class="tag-pill">Душ</span>
+            </div>
+            <div class="court-card-price">1 200 <span>₽/час</span></div>
+          </div>
+          <div class="court-card-image">
+            <svg viewBox="0 0 160 160" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <rect width="160" height="160" fill="var(--surface)"/>
+              <rect x="20" y="20" width="120" height="120" fill="oklch(0.55 0.05 145)" opacity="0.4"/>
+              <rect x="20" y="20" width="120" height="120" fill="none" stroke="var(--muted)" stroke-width="0.5"/>
+              <line x1="68" y1="20" x2="68" y2="140" stroke="var(--border)" stroke-width="2" opacity="0.6"/>
+              <line x1="92" y1="20" x2="92" y2="140" stroke="var(--border)" stroke-width="2" opacity="0.6"/>
+              <rect x="20" y="78" width="120" height="4" fill="var(--border)" opacity="0.7"/>
+              <circle cx="80" cy="80" r="3" fill="var(--border)" opacity="0.7"/>
+            </svg>
+          </div>
+        </div>
+        <div class="court-list-item selectable" data-court-id="2" data-type="хардкрытые" data-search="курт крытый спорта кондиционер">
+          <div>
+            <div class="court-card-type">Хард</div>
+            <div class="court-card-title">Корт «Крытый»</div>
+            <div class="court-card-meta">пр. Спорта, 8 · 4,1 км</div>
+            <div style="display:flex;gap:4px;margin-bottom:12px;flex-wrap:wrap;">
+              <span class="tag-pill">Кондиционер</span>
+              <span class="tag-pill">Трибуны</span>
+              <span class="tag-pill">Кафе</span>
+            </div>
+            <div class="court-card-price">1 800 <span>₽/час</span></div>
+          </div>
+          <div class="court-card-image">
+            <svg viewBox="0 0 160 160" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <rect width="160" height="160" fill="var(--surface)"/>
+              <rect x="20" y="20" width="120" height="120" fill="oklch(0.45 0.06 220)" opacity="0.35"/>
+              <rect x="20" y="20" width="120" height="120" fill="none" stroke="var(--muted)" stroke-width="0.5"/>
+              <line x1="68" y1="20" x2="68" y2="140" stroke="var(--border)" stroke-width="2" opacity="0.6"/>
+              <line x1="92" y1="20" x2="92" y2="140" stroke="var(--border)" stroke-width="2" opacity="0.6"/>
+              <rect x="20" y="78" width="120" height="4" fill="var(--border)" opacity="0.7"/>
+              <circle cx="80" cy="80" r="3" fill="var(--border)" opacity="0.7"/>
+            </svg>
+          </div>
+        </div>
+        <div class="court-list-item selectable" data-court-id="3" data-type="грунт открытые" data-search="курт парковый парк горького освещение">
+          <div>
+            <div class="court-card-type">Грунт</div>
+            <div class="court-card-title">Корт «Парковый»</div>
+            <div class="court-card-meta">Парк Горького, 1 · 0,8 км</div>
+            <div style="display:flex;gap:4px;margin-bottom:12px;flex-wrap:wrap;">
+              <span class="tag-pill">Освещение</span>
+              <span class="tag-pill">Парковка</span>
+            </div>
+            <div class="court-card-price">1 500 <span>₽/час</span></div>
+          </div>
+          <div class="court-card-image">
+            <svg viewBox="0 0 160 160" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <rect width="160" height="160" fill="var(--surface)"/>
+              <rect x="20" y="20" width="120" height="120" fill="oklch(0.55 0.05 145)" opacity="0.4"/>
+              <rect x="20" y="20" width="120" height="120" fill="none" stroke="var(--muted)" stroke-width="0.5"/>
+              <line x1="68" y1="20" x2="68" y2="140" stroke="var(--border)" stroke-width="2" opacity="0.6"/>
+              <line x1="92" y1="20" x2="92" y2="140" stroke="var(--border)" stroke-width="2" opacity="0.6"/>
+              <rect x="20" y="78" width="120" height="4" fill="var(--border)" opacity="0.7"/>
+              <circle cx="80" cy="80" r="3" fill="var(--border)" opacity="0.7"/>
+            </svg>
+          </div>
+        </div>
+        <div class="court-list-item selectable" data-court-id="4" data-type="трава открытые" data-search="уимблдон стиль рублевка vip ресторан бассейн">
+          <div>
+            <div class="court-card-type">Трава</div>
+            <div class="court-card-title">Уимблдон-стиль</div>
+            <div class="court-card-meta">Рублёвка, 42 · 12 км</div>
+            <div style="display:flex;gap:4px;margin-bottom:12px;flex-wrap:wrap;">
+              <span class="tag-pill">VIP-зона</span>
+              <span class="tag-pill">Ресторан</span>
+              <span class="tag-pill">Бассейн</span>
+            </div>
+            <div class="court-card-price">3 500 <span>₽/час</span></div>
+          </div>
+          <div class="court-card-image">
+            <svg viewBox="0 0 160 160" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <rect width="160" height="160" fill="var(--surface)"/>
+              <rect x="20" y="20" width="120" height="120" fill="oklch(0.55 0.06 120)" opacity="0.4"/>
+              <rect x="20" y="20" width="120" height="120" fill="none" stroke="var(--muted)" stroke-width="0.5"/>
+              <line x1="68" y1="20" x2="68" y2="140" stroke="var(--border)" stroke-width="2" opacity="0.6"/>
+              <line x1="92" y1="20" x2="92" y2="140" stroke="var(--border)" stroke-width="2" opacity="0.6"/>
+              <rect x="20" y="78" width="120" height="4" fill="var(--border)" opacity="0.7"/>
+              <circle cx="80" cy="80" r="3" fill="var(--border)" opacity="0.7"/>
+            </svg>
+          </div>
+        </div>
+        <div class="empty-state" id="catalog-empty">
+          <div class="empty-state-icon">&#127934;</div>
+          <div class="empty-state-title">Ничего не найдено</div>
+          <div class="empty-state-desc">Попробуйте изменить параметры фильтрации</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- STEP 2: Форма бронирования (скрыта до выбора корта) -->
+  <div id="booking-step" style="display:none;">
+    <div class="container">
+      <div class="court-detail-inline">
+        <div><div class="label">Покрытие</div><span id="detail-surface">—</span></div>
+        <div><div class="label">Адрес</div><span id="detail-address">—</span></div>
+        <div><div class="label">Вместимость</div>До 4 человек</div>
+        <div><div class="label">Инвентарь</div>Включён в аренду</div>
+      </div>
+    </div>
+
+    <section class="section">
+      <div class="container">
+        <div class="booking-layout">
+          <div class="booking-panel">
+            <h2>Дата</h2>
+            <div class="date-picker" id="date-picker" role="grid" aria-label="Выбор даты">
+              <div class="date-picker-label" aria-hidden="true">Пн</div>
+              <div class="date-picker-label" aria-hidden="true">Вт</div>
+              <div class="date-picker-label" aria-hidden="true">Ср</div>
+              <div class="date-picker-label" aria-hidden="true">Чт</div>
+              <div class="date-picker-label" aria-hidden="true">Пт</div>
+              <div class="date-picker-label" aria-hidden="true">Сб</div>
+              <div class="date-picker-label" aria-hidden="true">Вс</div>
+              <div class="date-cell other-month">29</div>
+              <div class="date-cell other-month">30</div>
+              <div class="date-cell other-month">31</div>
+              <div class="date-cell">1</div>
+              <div class="date-cell">2</div>
+              <div class="date-cell">3</div>
+              <div class="date-cell">4</div>
+              <div class="date-cell">5</div>
+              <div class="date-cell">6</div>
+              <div class="date-cell">7</div>
+              <div class="date-cell">8</div>
+              <div class="date-cell">9</div>
+              <div class="date-cell">10</div>
+              <div class="date-cell">11</div>
+              <div class="date-cell">12</div>
+              <div class="date-cell">13</div>
+              <div class="date-cell">14</div>
+              <div class="date-cell today">15</div>
+              <div class="date-cell selected">16</div>
+              <div class="date-cell">17</div>
+              <div class="date-cell">18</div>
+              <div class="date-cell">19</div>
+              <div class="date-cell">20</div>
+              <div class="date-cell">21</div>
+              <div class="date-cell">22</div>
+              <div class="date-cell">23</div>
+              <div class="date-cell">24</div>
+              <div class="date-cell">25</div>
+              <div class="date-cell">26</div>
+              <div class="date-cell">27</div>
+              <div class="date-cell">28</div>
+              <div class="date-cell">29</div>
+              <div class="date-cell">30</div>
+              <div class="date-cell">1</div>
+              <div class="date-cell">2</div>
+            </div>
+
+            <h2>Время</h2>
+            <div class="time-slots" id="time-slots" role="radiogroup" aria-label="Выбор времени">
+              <div class="time-slot" role="radio" aria-checked="false">08:00</div>
+              <div class="time-slot" role="radio" aria-checked="false">09:00</div>
+              <div class="time-slot" role="radio" aria-checked="false">10:00</div>
+              <div class="time-slot" role="radio" aria-checked="false">11:00</div>
+              <div class="time-slot" role="radio" aria-checked="false">12:00</div>
+              <div class="time-slot" role="radio" aria-checked="false">13:00</div>
+              <div class="time-slot selected" role="radio" aria-checked="true">14:00</div>
+              <div class="time-slot" role="radio" aria-checked="false">15:00</div>
+              <div class="time-slot" role="radio" aria-checked="false">16:00</div>
+              <div class="time-slot" role="radio" aria-checked="false">17:00</div>
+              <div class="time-slot unavailable" role="radio" aria-checked="false" aria-disabled="true">18:00</div>
+              <div class="time-slot unavailable" role="radio" aria-checked="false" aria-disabled="true">19:00</div>
+            </div>
+
+            <h2>Продолжительность</h2>
+            <div style="display:flex;gap:8px;margin-bottom:24px;" role="radiogroup" aria-label="Выбор продолжительности">
+              <button class="time-slot selected" style="flex:1;" data-duration="1">1 час</button>
+              <button class="time-slot" style="flex:1;" data-duration="1.5">1,5 часа</button>
+              <button class="time-slot" style="flex:1;" data-duration="2">2 часа</button>
+            </div>
+
+            <div class="booking-summary">
+              <div class="summary-row"><span>Корт</span><span id="summary-court">—</span></div>
+              <div class="summary-row"><span>Дата</span><span id="summary-date">16 июля 2026</span></div>
+              <div class="summary-row"><span>Время</span><span id="summary-time">14:00 – 15:00</span></div>
+              <div class="summary-row"><span>Длительность</span><span id="summary-duration">1 час</span></div>
+              <div class="summary-row total"><span>Итого</span><span id="summary-total">0 ₽</span></div>
+            </div>
+            <button class="btn btn-accent" style="width:100%;height:48px;margin-top:24px;" id="add-to-cart">
+              Добавить в корзину
+            </button>
+          </div>
+
+          <div class="booking-panel">
+            <h2>Корзина</h2>
+            <div id="cart-list"></div>
+            <div class="cart-summary" id="cart-summary" style="display:none;">
+              <div class="summary-row total"><span>Итого</span><span id="cart-total">0 ₽</span></div>
+              <button class="btn btn-accent" style="width:100%;height:48px;margin-top:16px;" id="confirm-cart">
+                Подтвердить все брони
+              </button>
+              <p style="font-size:12px;color:var(--muted);margin-top:12px;text-align:center;letter-spacing:0.01em;">
+                Бесплатная отмена за 2 часа до начала
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+</div>
+
+<!-- ==================== SCREEN: PROFILE ==================== -->
+<div class="screen" data-screen="profile">
+  <div class="container">
+    <div class="profile-header">
+      <div class="profile-avatar" aria-hidden="true">АЛ</div>
+      <div>
+        <div class="profile-name">Алексей Леонов</div>
+        <div class="profile-email">alexey@example.com</div>
+      </div>
+      <button class="btn btn-sm" style="margin-left:auto;">Редактировать</button>
+    </div>
+
+    <section>
+      <div class="section-header" style="padding-top:32px;">
+        <h2 class="section-title">История броней</h2>
+      </div>
+      <div class="history-list">
+        <div class="history-item">
+          <div>
+            <div class="history-court">Корт «Парковый»</div>
+            <div class="history-date">14 июля 2026, 15:00–16:00</div>
+          </div>
+          <div class="history-status completed">Завершено</div>
+        </div>
+        <div class="history-item">
+          <div>
+            <div class="history-court">Корт №1 «Центральный»</div>
+            <div class="history-date">10 июля 2026, 10:00–12:00</div>
+          </div>
+          <div class="history-status completed">Завершено</div>
+        </div>
+        <div class="history-item">
+          <div>
+            <div class="history-court">Корт «Крытый»</div>
+            <div class="history-date">18 июля 2026, 14:00–15:00</div>
+          </div>
+          <div class="history-status active">Предстоит</div>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="profile-grid">
+        <div class="profile-card">
+          <h3>Платёжные данные</h3>
+          <div class="list-item"><span>Карта</span><span>•••• 4532</span></div>
+          <div class="list-item"><span>Баланс</span><span>3 400 ₽</span></div>
+          <div style="margin-top:16px;">
+            <button class="btn btn-sm">Пополнить</button>
+          </div>
+        </div>
+        <div class="profile-card">
+          <h3>Настройки</h3>
+          <div class="list-item"><span>Уведомления</span><span><label style="display:inline-flex;align-items:center;gap:8px;cursor:pointer;"><input type="checkbox" checked aria-label="Уведомления"> Вкл</label></span></div>
+          <div class="list-item"><span>Язык</span><span>Русский</span></div>
+          <div class="list-item"><span>Напоминания</span><span>За 1 час</span></div>
+        </div>
+      </div>
+    </section>
+
+    <section style="margin-bottom:64px;">
+      <div class="section-header" style="padding-top:32px;">
+        <h2 class="section-title">Статистика</h2>
+      </div>
+      <div class="features" style="border:1px solid var(--border);">
+        <div class="feature-item">
+          <div class="feature-number"><span class="accent-num">12</span></div>
+          <div class="feature-label">всего бронирований</div>
+        </div>
+        <div class="feature-item">
+          <div class="feature-number"><span class="accent-num">8</span></div>
+          <div class="feature-label">посещено</div>
+        </div>
+        <div class="feature-item">
+          <div class="feature-number"><span class="accent-num">4</span></div>
+          <div class="feature-label">предстоит</div>
+        </div>
+        <div class="feature-item">
+          <div class="feature-number"><span class="accent-num">14 800</span></div>
+          <div class="feature-label">₽ потрачено</div>
+        </div>
+      </div>
+    </section>
+  </div>
+</div>
+</main>
+
+<!-- Footer -->
+<footer class="footer" role="contentinfo">
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <span class="nav-logo">БроньКорт</span>
+        <p>Сервис бронирования теннисных кортов. Быстро, удобно, без комиссии. Найди корт рядом и играй уже сегодня.</p>
+      </div>
+      <div class="footer-col">
+        <h4>Сервис</h4>
+        <a href="#" data-screen="booking">Бронирование</a>
+        <a href="#">Для владельцев</a>
+        <a href="#">Тарифы</a>
+      </div>
+      <div class="footer-col">
+        <h4>Компания</h4>
+        <a href="#">О нас</a>
+        <a href="#">Блог</a>
+        <a href="#">Контакты</a>
+        <a href="#">Вакансии</a>
+      </div>
+      <div class="footer-col">
+        <h4>Поддержка</h4>
+        <a href="#">Центр помощи</a>
+        <a href="#">Безопасность</a>
+        <a href="#">Условия</a>
+        <a href="#">Конфиденциальность</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>&copy; 2026 БроньКорт. Все права защищены.</span>
+      <div class="footer-social" aria-label="Социальные сети">
+        <a href="https://t.me/playton12" aria-label="Telegram">
+          <svg viewBox="0 0 16 16" fill="currentColor"><path d="M14.5 2.2L1.3 7.5c-.6.2-.6.6 0 .8l3.3 1.1 1.3 4.2c.1.4.6.5.9.2l1.9-1.5 3.7 2.7c.7.4 1.2.2 1.3-.6L15 3.1c.2-.9-.4-1.3-1.3-1zm-9 6.2L12.1 3M5.5 8.4l1 4.1"/></svg>
+        </a>
+        <a href="https://github.com/Playton12" aria-label="GitHub">
+          <svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.6 0 0 3.6 0 8c0 3.5 2.3 6.5 5.5 7.5.4.1.5-.2.5-.4v-1.4c-2.2.5-2.7-1.1-2.7-1.1-.4-.9-.9-1.2-.9-1.2-.7-.5.1-.5.1-.5.8.1 1.2.8 1.2.8.7 1.2 1.9.9 2.3.7.1-.5.3-.9.5-1.1-1.8-.2-3.7-.9-3.7-4 0-.9.3-1.6.8-2.2-.1-.2-.4-1 .1-2.1 0 0 .7-.2 2.2.8.6-.2 1.3-.3 2-.3s1.4.1 2 .3c1.5-1 2.2-.8 2.2-.8.5 1.1.2 1.9.1 2.1.5.6.8 1.3.8 2.2 0 3.1-1.9 3.8-3.7 4 .3.3.6.8.6 1.6v2.4c0 .2.1.5.6.4C13.7 14.5 16 11.5 16 8c0-4.4-3.6-8-8-8z"/></svg>
+        </a>
+        <a href="https://vk.ru/p1ayton" aria-label="VK">
+          <svg viewBox="0 0 16 16" fill="currentColor"><path d="M8.2 11.4c-3.3 0-5.2-2.3-5.3-6.1h1.7c.1 2.8 1.3 4 2.3 4.3V5.3H8.5v2.5c1-.1 2-0.9 2.3-1.8h1.7c-.2 1.2-1.1 2.2-1.7 2.7.8.4 2.1 1.3 2.7 3.2H12c-.5-1.5-1.7-2.4-3.8-2.4zM5.4 4.1c-.5 0-1-.4-1-1s.4-1 1-1 1 .4 1 1-.5 1-1 1zM11.1 5.3h-1.4v1.6c0 .3.1.5.4.5h1v1.8h-1.2c-1.3 0-2-.8-2-2.3V5.3H6.6V3.7h1.3V2.6h1.7v1.1h2v1.6z"/></svg>
+        </a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<script>
+(function() {
+  var STORAGE_KEY = 'bronkort-screen';
+  var THEME_KEY = 'bronkort-theme';
+  var CART_KEY = 'bronkort-cart';
+  var allScreenLinks = document.querySelectorAll('[data-screen]');
+  var $screens = document.querySelectorAll('.screen');
+  var $mobileNav = document.querySelector('.mobile-nav');
+  var $mobileToggle = document.querySelector('.mobile-nav-toggle');
+  var $bookingStep = document.getElementById('booking-step');
+
+  var courts = {
+    1: { name: 'Корт №1 «Центральный»', surface: 'Грунт', address: 'ул. Теннисная, 15', price: 1200, lat: 55.7512, lng: 37.6170 },
+    2: { name: 'Корт «Крытый»', surface: 'Хард', address: 'пр. Спорта, 8', price: 1800, lat: 55.7380, lng: 37.5905 },
+    3: { name: 'Корт «Парковый»', surface: 'Грунт', address: 'Парк Горького, 1', price: 1500, lat: 55.7293, lng: 37.6035 },
+    4: { name: 'Уимблдон-стиль', surface: 'Трава', address: 'Рублёвка, 42', price: 3500, lat: 55.7420, lng: 37.5800 }
+  };
+
+  var monthNames = ['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
+  var durationNames = { '1': '1 час', '1.5': '1,5 часа', '2': '2 часа' };
+
+  // --- Navigation ---
+  function navigate(screenId) {
+    $screens.forEach(function(s) { s.classList.remove('active'); });
+    var target = document.querySelector('.screen[data-screen="' + screenId + '"]');
+    if (target) target.classList.add('active');
+    allScreenLinks.forEach(function(a) {
+      a.classList.toggle('active', a.getAttribute('data-screen') === screenId);
+    });
+    $mobileNav.classList.remove('open');
+    try { localStorage.setItem(STORAGE_KEY, screenId); } catch(e) {}
+    window.scrollTo({ top: 0 });
+  }
+
+  try {
+    var saved = localStorage.getItem(STORAGE_KEY);
+    if (saved && document.querySelector('.screen[data-screen="' + saved + '"]')) navigate(saved);
+  } catch(e) {}
+
+  allScreenLinks.forEach(function(a) {
+    a.addEventListener('click', function(e) {
+      var screen = this.getAttribute('data-screen');
+      if (screen) { e.preventDefault(); navigate(screen); }
+    });
+  });
+
+  $mobileToggle.addEventListener('click', function() {
+    $mobileNav.classList.toggle('open');
+  });
+
+  // --- Theme ---
+  var $themeToggle = document.getElementById('theme-toggle');
+  function applyTheme(theme) {
+    document.documentElement.setAttribute('data-theme', theme);
+    try { localStorage.setItem(THEME_KEY, theme); } catch(e) {}
+  }
+  try {
+    var savedTheme = localStorage.getItem(THEME_KEY);
+    if (savedTheme) applyTheme(savedTheme);
+  } catch(e) {}
+  $themeToggle.addEventListener('click', function() {
+    var current = document.documentElement.getAttribute('data-theme');
+    var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    var next = !current ? (prefersDark ? 'light' : 'dark') : (current === 'dark' ? 'light' : 'dark');
+    applyTheme(next);
+  });
+
+  // --- Filters (inside booking screen) ---
+  var $filterBtns = document.querySelectorAll('#booking-filters .filter-btn');
+  var $courtItems = document.querySelectorAll('#booking-court-list .court-list-item');
+  var $emptyState = document.getElementById('catalog-empty');
+
+  function applyFilters() {
+    var activeBtn = document.querySelector('#booking-filters .filter-btn.active');
+    var filter = activeBtn ? activeBtn.getAttribute('data-filter') : 'all';
+    var visibleCount = 0;
+    $courtItems.forEach(function(item) {
+      var types = (item.getAttribute('data-type') || '').toLowerCase();
+      var matchFilter = filter === 'all' || types.indexOf(filter) !== -1;
+      item.classList.toggle('hidden', !matchFilter);
+      if (matchFilter) visibleCount++;
+    });
+    if ($emptyState) $emptyState.classList.toggle('visible', visibleCount === 0);
+  }
+
+  $filterBtns.forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      $filterBtns.forEach(function(b) { b.classList.remove('active'); });
+      this.classList.add('active');
+      applyFilters();
+    });
+  });
+
+  // Hero search -> switch to booking
+  var $heroSearch = document.getElementById('hero-search');
+  var $heroSearchBtn = document.querySelector('.search-bar button[aria-label="Найти"]');
+  function doHeroSearch() {
+    if ($heroSearch.value.trim()) navigate('booking');
+  }
+  $heroSearchBtn.addEventListener('click', doHeroSearch);
+  $heroSearch.addEventListener('keydown', function(e) { if (e.key === 'Enter') doHeroSearch(); });
+
+  // --- GEOLOCATION ---
+  var $geoBtn = document.getElementById('geo-btn');
+  var $geoStatus = document.getElementById('geo-status');
+  var GEO_CACHE_KEY = 'bronkort-geo';
+  var userLat = null, userLng = null;
+
+  function haversine(lat1, lon1, lat2, lon2) {
+    var R = 6371;
+    var dLat = (lat2 - lat1) * Math.PI / 180;
+    var dLon = (lon2 - lon1) * Math.PI / 180;
+    var a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+            Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+            Math.sin(dLon/2) * Math.sin(dLon/2);
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  }
+
+  function formatDist(km) {
+    if (km < 1) return Math.round(km * 1000) + ' м';
+    return km.toFixed(1).replace('.', ',') + ' км';
+  }
+
+  function updateHomeDistances() {
+    if (userLat === null) return;
+    var grid = document.querySelector('.court-grid');
+    var cards = Array.from(grid.children);
+
+    cards.forEach(function(card) {
+      var id = parseInt(card.querySelector('[data-court]').getAttribute('data-court'));
+      var court = courts[id];
+      if (!court || userLat === null) return;
+      var km = haversine(userLat, userLng, court.lat, court.lng);
+      card._dist = km;
+      var meta = card.querySelector('.court-card-meta');
+      meta.textContent = court.address + ' · ' + formatDist(km);
+    });
+
+    cards.sort(function(a, b) { return (a._dist || 9999) - (b._dist || 9999); });
+    cards.forEach(function(card) { grid.appendChild(card); });
+  }
+
+  function onGeoSuccess(pos) {
+    userLat = pos.coords.latitude;
+    userLng = pos.coords.longitude;
+    try { sessionStorage.setItem(GEO_CACHE_KEY, JSON.stringify({ lat: userLat, lng: userLng })); } catch(e) {}
+    $geoBtn.classList.remove('loading', 'error');
+    $geoBtn.classList.add('active');
+    updateHomeDistances();
+    $geoStatus.innerHTML = 'Расстояния рассчитаны от вашей точки';
+    setTimeout(function() { $geoStatus.textContent = ''; }, 4000);
+  }
+
+  function onGeoError() {
+    $geoBtn.classList.remove('loading');
+    $geoBtn.classList.add('error');
+    setTimeout(function() { $geoBtn.classList.remove('error'); }, 2000);
+    $geoStatus.textContent = 'Не удалось определить местоположение';
+    setTimeout(function() { $geoStatus.textContent = ''; }, 4000);
+  }
+
+  $geoBtn.addEventListener('click', function() {
+    if (!navigator.geolocation) {
+      $geoStatus.textContent = 'Геолокация не поддерживается браузером';
+      setTimeout(function() { $geoStatus.textContent = ''; }, 4000);
+      return;
+    }
+    $geoBtn.classList.add('loading');
+    $geoStatus.textContent = 'Определяем местоположение...';
+    navigator.geolocation.getCurrentPosition(onGeoSuccess, onGeoError, { enableHighAccuracy: false, timeout: 8000 });
+  });
+
+  // Restore cached geo
+  try {
+    var cached = sessionStorage.getItem(GEO_CACHE_KEY);
+    if (cached) {
+      var g = JSON.parse(cached);
+      userLat = g.lat; userLng = g.lng;
+      $geoBtn.classList.add('active');
+      updateHomeDistances();
+    }
+  } catch(e) {}
+
+  // --- CART ---
+  var cart = [];
+  try {
+    var savedCart = localStorage.getItem(CART_KEY);
+    if (savedCart) cart = JSON.parse(savedCart);
+  } catch(e) {}
+
+  function saveCart() {
+    try { localStorage.setItem(CART_KEY, JSON.stringify(cart)); } catch(e) {}
+  }
+
+  var currentCourtId = null;
+
+  function selectCourt(courtId) {
+    var court = courts[courtId];
+    if (!court) return;
+    currentCourtId = courtId;
+
+    // Highlight selected court in list
+    $courtItems.forEach(function(item) {
+      item.classList.toggle('selected-court', item.getAttribute('data-court-id') === String(courtId));
+    });
+
+    // Fill detail panel
+    document.getElementById('detail-surface').textContent = court.surface;
+    document.getElementById('detail-address').textContent = court.address;
+    document.getElementById('summary-court').textContent = court.name;
+
+    // Show booking form
+    $bookingStep.style.display = 'block';
+
+    // Scroll to booking form
+    setTimeout(function() {
+      $bookingStep.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 50);
+
+    updateSummary();
+  }
+
+  function updateSummary() {
+    var selectedDate = document.querySelector('.date-cell.selected');
+    var selectedTime = document.querySelector('#time-slots .time-slot.selected');
+    var selectedDuration = document.querySelector('[data-duration].selected');
+
+    if (selectedDate) {
+      var day = parseInt(selectedDate.textContent);
+      document.getElementById('summary-date').textContent = day + ' июля 2026';
+    }
+    if (selectedTime) {
+      var timeVal = selectedTime.textContent;
+      var hour = parseInt(timeVal);
+      var dur = selectedDuration ? parseFloat(selectedDuration.getAttribute('data-duration')) : 1;
+      var endHour = hour + dur;
+      var endStr = Math.floor(endHour) + ':' + (endHour % 1 === 0 ? '00' : '30');
+      document.getElementById('summary-time').textContent = timeVal + ' – ' + endStr;
+    }
+    if (selectedDuration) {
+      var durKey = selectedDuration.getAttribute('data-duration');
+      document.getElementById('summary-duration').textContent = durationNames[durKey] || durKey + ' ч';
+    }
+
+    if (currentCourtId) {
+      var court = courts[currentCourtId];
+      var dur = selectedDuration ? parseFloat(selectedDuration.getAttribute('data-duration')) : 1;
+      var total = Math.round(court.price * dur);
+      document.getElementById('summary-total').textContent = total.toLocaleString('ru-RU') + ' ₽';
+    }
+  }
+
+  function getFormData() {
+    var selectedDate = document.querySelector('.date-cell.selected');
+    var selectedTime = document.querySelector('#time-slots .time-slot.selected');
+    var selectedDuration = document.querySelector('[data-duration].selected');
+    if (!currentCourtId || !selectedDate || !selectedTime) return null;
+    var court = courts[currentCourtId];
+    var day = parseInt(selectedDate.textContent);
+    var timeVal = selectedTime.textContent;
+    var dur = selectedDuration ? parseFloat(selectedDuration.getAttribute('data-duration')) : 1;
+    var hour = parseInt(timeVal);
+    var endHour = hour + dur;
+    var endStr = Math.floor(endHour) + ':' + (endHour % 1 === 0 ? '00' : '30');
+    return {
+      id: Date.now(),
+      courtId: currentCourtId,
+      courtName: court.name,
+      surface: court.surface,
+      date: day + ' июля 2026',
+      time: timeVal + ' – ' + endStr,
+      duration: durationNames[String(dur)] || dur + ' ч',
+      durationNum: dur,
+      price: Math.round(court.price * dur)
+    };
+  }
+
+  function renderCart() {
+    var $cartList = document.getElementById('cart-list');
+    var $cartSummary = document.getElementById('cart-summary');
+
+    if (cart.length === 0) {
+      $cartList.innerHTML = '<div class="cart-empty"><div class="cart-empty-title">Корзина пуста</div><div class="cart-empty-desc">Выберите корт и добавьте бронь</div></div>';
+      $cartSummary.style.display = 'none';
+    } else {
+      var html = '';
+      var grandTotal = 0;
+      cart.forEach(function(item, i) {
+        grandTotal += item.price;
+        html += '<div class="cart-item" data-cart-index="' + i + '">';
+        html += '<div class="cart-item-info">';
+        html += '<div class="cart-item-court">' + item.courtName + '</div>';
+        html += '<div class="cart-item-details">' + item.date + ', ' + item.time + ' · ' + item.duration + '</div>';
+        html += '</div>';
+        html += '<div class="cart-item-price">' + item.price.toLocaleString('ru-RU') + ' ₽</div>';
+        html += '<button class="cart-item-remove" data-remove="' + i + '" aria-label="Удалить бронь">&times;</button>';
+        html += '</div>';
+      });
+      $cartList.innerHTML = html;
+      $cartSummary.style.display = 'block';
+      document.getElementById('cart-total').textContent = grandTotal.toLocaleString('ru-RU') + ' ₽';
+    }
+    updateCartBadge();
+  }
+
+  function updateCartBadge() {
+    document.querySelectorAll('.cart-badge').forEach(function(b) {
+      b.setAttribute('data-count', cart.length);
+    });
+  }
+
+  // Date cell selection
+  document.querySelectorAll('.date-cell').forEach(function(cell) {
+    cell.addEventListener('click', function() {
+      if (this.classList.contains('other-month')) return;
+      document.querySelectorAll('.date-cell').forEach(function(c) { c.classList.remove('selected'); });
+      this.classList.add('selected');
+      updateSummary();
+    });
+  });
+
+  // Time slot selection
+  var $timeSlots = document.querySelectorAll('#time-slots .time-slot');
+  $timeSlots.forEach(function(slot) {
+    slot.addEventListener('click', function() {
+      if (this.classList.contains('unavailable')) return;
+      $timeSlots.forEach(function(s) { s.classList.remove('selected'); s.setAttribute('aria-checked', 'false'); });
+      this.classList.add('selected');
+      this.setAttribute('aria-checked', 'true');
+      updateSummary();
+    });
+  });
+
+  // Duration selection
+  var $durationBtns = document.querySelectorAll('[data-duration]');
+  $durationBtns.forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      $durationBtns.forEach(function(s) { s.classList.remove('selected'); });
+      this.classList.add('selected');
+      updateSummary();
+    });
+  });
+
+  // Court selection (click on court-list-item)
+  $courtItems.forEach(function(item) {
+    item.addEventListener('click', function() {
+      var courtId = this.getAttribute('data-court-id');
+      if (courtId) selectCourt(parseInt(courtId));
+    });
+  });
+
+  // Add to cart
+  document.getElementById('add-to-cart').addEventListener('click', function() {
+    var data = getFormData();
+    if (!data) {
+      showToast('Выберите корт, дату и время');
+      return;
+    }
+    cart.push(data);
+    saveCart();
+    renderCart();
+    showToast('Добавлено в корзину');
+  });
+
+  // Remove from cart (delegated)
+  document.getElementById('cart-list').addEventListener('click', function(e) {
+    var btn = e.target.closest('[data-remove]');
+    if (!btn) return;
+    cart.splice(parseInt(btn.getAttribute('data-remove')), 1);
+    saveCart();
+    renderCart();
+  });
+
+  // Confirm all bookings
+  document.getElementById('confirm-cart').addEventListener('click', function() {
+    if (cart.length === 0) return;
+    var count = cart.length;
+    cart = [];
+    saveCart();
+    renderCart();
+    showToast(count + ' бронирований подтверждено!');
+  });
+
+  // Toast
+  function showToast(msg) {
+    var toast = document.createElement('div');
+    toast.textContent = msg;
+    Object.assign(toast.style, {
+      position: 'fixed', bottom: '24px', left: '50%',
+      transform: 'translateX(-50%) translateY(20px)',
+      background: 'var(--fg)', color: 'var(--bg)',
+      padding: '14px 28px', fontFamily: 'var(--font-display)',
+      fontSize: '13px', letterSpacing: '0.06em',
+      textTransform: 'uppercase', zIndex: '200',
+      border: '1px solid var(--fg)',
+      opacity: '0', transition: 'opacity 0.3s, transform 0.3s'
+    });
+    document.body.appendChild(toast);
+    requestAnimationFrame(function() {
+      toast.style.opacity = '1';
+      toast.style.transform = 'translateX(-50%) translateY(0)';
+    });
+    setTimeout(function() {
+      toast.style.opacity = '0';
+      toast.style.transform = 'translateX(-50%) translateY(20px)';
+      setTimeout(function() { toast.remove(); }, 300);
+    }, 2500);
+  }
+
+  renderCart();
+  updateSummary();
+})();
+</script>
+</body>
+</html>
